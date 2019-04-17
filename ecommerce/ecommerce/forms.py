@@ -13,3 +13,21 @@ class ContactForm(forms.Form):
         'class': 'form-control',
         'placeholder': 'Your message'
     }))
+
+    def clean_fullname(self):
+        fullname = self.cleaned_data.get('fullname')
+        if len(fullname) < 3:
+            raise forms.ValidationError("Fullname should be at least 3 characters long")
+        return fullname
+
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        if 'test.com' in email or 'abc.com' in email:
+            raise forms.ValidationError("Invalid email used")
+        return email
+
+    def clean_content(self):
+        content = self.cleaned_data.get('content')
+        if len(content) == 1:
+            raise forms.ValidationError("Content must be greater than a character")
+        return content
