@@ -6,6 +6,8 @@ from django.views.generic import (
 
 from .models import Product
 from carts.models import Cart
+from analytics.mixins import ObjectViewedMixin
+# from analytics.signals import object_viewed_signal
 
 # Create your views here.
 class ProductListView(ListView):
@@ -18,7 +20,7 @@ class ProductListView(ListView):
         return context
     
 
-class ProductDetailView(DetailView):
+class ProductDetailView(ObjectViewedMixin, DetailView):
     model = Product
 
     def get_object(self, *args, **kwargs):
@@ -29,7 +31,7 @@ class ProductDetailView(DetailView):
             raise Http404("Product doesn't exist!")
         return instance
 
-class ProductSlugDetailView(DetailView):
+class ProductSlugDetailView(ObjectViewedMixin, DetailView):
     model = Product
 
     
@@ -46,6 +48,7 @@ class ProductSlugDetailView(DetailView):
         instance = Product.objects.get_by_slug(slug)
         if instance is None:
             raise Http404("Product doesn't exist!")
+        # object_viewed_signal.send(instance.__class__, instance = instance, request = request)
         return instance
 
 class ProductFeaturedListView(ListView):
@@ -59,7 +62,7 @@ class ProductFeaturedListView(ListView):
         # queryset = super().get_queryset()
         # return queryset.filter(featured = True)
 
-class ProductFeaturedDetailView(DetailView):
+class ProductFeaturedDetailView(ObjectViewedMixin, DetailView):
     template_name = 'products/product_featured_detail.html'
     model = Product
 
@@ -70,7 +73,7 @@ class ProductFeaturedDetailView(DetailView):
         # queryset = super().get_queryset()
         # return queryset.filter(featured = True)
 
-class ProductSlugFeaturedDetailView(DetailView):
+class ProductSlugFeaturedDetailView(ObjectViewedMixin, DetailView):
     template_name = 'products/product_featured_detail.html'
     model = Product
 
