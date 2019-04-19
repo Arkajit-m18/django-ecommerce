@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
-import os
+import os, stripe
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -54,6 +54,9 @@ AUTH_USER_MODEL = 'accounts.User' # Changes built-in user model to ours
 
 FORCE_SESSION_TO_ONE = False
 FORCE_INACTIVE_USER_ENDSESSION = False
+
+STRIPE_SECRET_KEY = "sk_test_nVVDnn3MEp769przNtUCPEuN"
+STRIPE_PUBLISH_KEY = "pk_test_poMIyXRk0ctfJGKxpJYeHa94"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

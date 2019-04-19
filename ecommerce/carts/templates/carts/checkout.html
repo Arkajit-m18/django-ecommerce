@@ -45,21 +45,29 @@
             </div>
         </div>
         {% else %}
-            <h1>Checkout</h1>
-            <p class="lead">Cart Item(s): 
-                {% for product in order.cart.products.all %}
-                    {{ product }}{% if not forloop.last %}, {% endif %}
-                {% endfor %}
-            </p>
-            <p class="lead">Shipping Address: {{ order.shipping_address.get_address }}</p>
-            <p class="lead">Billing Address: {{ order.billing_address.get_address }}</p>
-            <p class="lead">Cart total: {{ order.cart.total }}</p>
-            <p class="lead">Shipping total: {{ order.shipping_total }}</p>
-            <p class="lead">Order total: {{ order.total }}</p>
-            <form class="form" method="POST">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-success btn-lg">Checkout</button>
-            </form>
+            {% if not has_card %}
+                <div class="col-10 col-md-6 mx-auto">
+                    <h1>Add Payment method</h1>
+                    <div class="stripe-payment-form" data-token="{{ publish_key }}" data-next-url="{{ request.build_absolute_uri }}" data-btn-title="Add Payment Method"></div>
+                </div>
+            {% else %}
+                <h1>Checkout</h1>
+                <p class="lead">Cart Item(s): 
+                    {% for product in order.cart.products.all %}
+                        {{ product }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+                <p class="lead">Shipping Address: {{ order.shipping_address.get_address }}</p>
+                <p class="lead">Billing Address: {{ order.billing_address.get_address }}</p>
+                <p class="lead">Payment Method: {{ billing_profile.default_card }} (<a href="{{ billing_profile.get_payment_method_url }}?next={{ request.build_absolute_uri }}">Change</a>)</p>
+                <p class="lead">Cart total: {{ order.cart.total }}</p>
+                <p class="lead">Shipping total: {{ order.shipping_total }}</p>
+                <p class="lead">Order total: {{ order.total }}</p>
+                <form class="form" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-lg">Checkout</button>
+                </form>
+            {% endif %}
         {% endif %}
     {% endif %}
 {% endblock %}

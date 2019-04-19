@@ -22,3 +22,13 @@
 
 <!-- Custom ajax JS -->
 <script src="{% static 'js/ecommerce_ajax.js' %}"></script>
+
+<!-- Stripe JS -->
+<script src="https://js.stripe.com/v3/"></script>
+
+<!-- JS render CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/1.0.2/jsrender.min.js"></script>
+{% include 'base/js_templates.html' %}
+
+<!-- eCommerce custom JS -->
+<script src="{% static 'js/ecommerce_main.js' %}"></script>

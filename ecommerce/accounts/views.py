@@ -33,7 +33,7 @@ class LoginView(FormView):
                 return redirect(redirect_path)
             else:
                 return redirect('/')
-        return super(LoginView, self).form_invalid()
+        return super(LoginView, self).form_invalid(form)
 
 # def login_page(request):
 #     form = forms.LoginForm(request.POST or None)
