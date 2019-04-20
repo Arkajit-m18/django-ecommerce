@@ -24,6 +24,7 @@ from . import views
 from carts.views import cart_home, cart_detail_api_view
 from addresses.views import checkout_address_create_view, checkout_address_reuse_view
 from billing.views import payment_method_view, payment_method_createview
+from marketing.views import MarketingPreferenceView, MailchimpWebhookView
 
 urlpatterns = [
     path('', views.home_page, name = 'home'),
@@ -43,6 +44,8 @@ urlpatterns = [
     path('products/', include('products.urls', namespace = 'products')),
     path('search/', include('search.urls', namespace = 'search')),
     path('cart/', include('carts.urls', namespace = 'carts')),
+    path('settings/email/', MarketingPreferenceView.as_view(), name = 'marketing_pref'),
+    path('webhooks/mailchimp/', MailchimpWebhookView.as_view(), name = 'webhooks-mailchimp'),
     path('admin/', admin.site.urls),
 ]
 
