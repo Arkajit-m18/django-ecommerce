@@ -1,11 +1,42 @@
 from django.shortcuts import render, redirect
 from django.utils.http import is_safe_url
+from django.views.generic import CreateView, UpdateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse
 
-from .forms import AddressForm
+from .forms import AddressForm, AddressEditForm
 from .models import Address
 from billing.models import BillingProfile
 
 # Create your views here.
+
+class AddressUpdateView(LoginRequiredMixin, UpdateView):
+    template_name = 'addresses/address_edit.html'
+    model = Address
+    form_class = AddressEditForm
+
+    def get_object(self):
+        billing_profile, created = BillingProfile.objects.new_or_get(self.request)
+        return Address.objects.get(billing_profile = billing_profile)
+
+    def get_success_url(self):
+        return reverse('accounts:accounts_home')
+
+class AddressCreateView(LoginRequiredMixin, CreateView):
+    template_name = 'addresses/address_edit.html'
+    model = Address
+    form_class = AddressEditForm
+
+    def form_valid(self, form):
+        self.object = form.save(commit = False)
+        billing_profile, created = BillingProfile.objects.new_or_get(self.request)
+        self.object.billing_profile = billing_profile
+        self.object.save()
+        return super(AddressCreateView, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse('accounts:accounts_home')
+
 def checkout_address_create_view(request):
     form = AddressForm(request.POST or None)
     next_ = request.GET.get('next')

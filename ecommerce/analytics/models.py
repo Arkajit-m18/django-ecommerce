@@ -14,6 +14,22 @@ FORCE_INACTIVE_USER_ENDSESSION = getattr(settings, 'FORCE_INACTIVE_USER_ENDSESSI
 
 User = settings.AUTH_USER_MODEL
 
+class ObjectViewedQuerySet(models.QuerySet):
+    def by_model(self, model_class, model_queryset = False):
+        c_type = ContentType.objects.get_for_model(model_class)
+        views_qs = self.filter(content_type = c_type)
+        if model_queryset:
+            view_ids = [view.object_id for view in views_qs]
+            return model_class.objects.filter(pk__in = view_ids)
+        return views_qs
+
+class ObjectViewedManager(models.Manager):
+    def get_queryset(self):
+        return ObjectViewedQuerySet(self.model, using = self._db)
+
+    def by_model(self, model_class, model_queryset = False):
+        return self.get_queryset().by_model(model_class = model_class, model_queryset = model_queryset)
+
 # Create your models here.
 class ObjectViewed(models.Model):
     user = models.ForeignKey(User, blank = True, null = True, on_delete = models.CASCADE)
@@ -22,6 +38,8 @@ class ObjectViewed(models.Model):
     object_id = models.PositiveIntegerField()
     content_obj = GenericForeignKey('content_type', 'object_id')
     timestamp = models.DateTimeField(auto_now_add = True)
+
+    objects = ObjectViewedManager()
 
     def __str__(self):
         return f'{self.content_obj} viewed on {self.timestamp}'

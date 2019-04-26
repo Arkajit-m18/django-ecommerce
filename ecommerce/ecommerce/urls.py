@@ -18,8 +18,9 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth.views import LogoutView
+from django.views.generic import RedirectView
 
-from accounts.views import LoginView, RegisterView, guest_register_view
+from accounts.views import LoginView, RegisterView, GuestRegisterView
 from . import views
 from carts.views import cart_home, cart_detail_api_view
 from addresses.views import checkout_address_create_view, checkout_address_reuse_view
@@ -30,9 +31,15 @@ urlpatterns = [
     path('', views.home_page, name = 'home'),
     path('about/', views.about_page, name = 'about'),
     path('contacts/', views.contacts_page, name = 'contacts'),
+    path('addresses/', include('addresses.urls', namespace = 'addresses')),
+    # path('accounts/login/', RedirectView.as_view(url = '/login/')),
+    path('accounts/', RedirectView.as_view(url = '/account')),
+    path('account/', include('accounts.urls', namespace = 'accounts')),
+    path('accounts/', include('accounts.passwords.urls')),
     path('login/', LoginView.as_view(), name = 'login'),
     # path('login/', login_page, name = 'login'),
-    path('register/guest/', guest_register_view, name = 'guest_register'),
+    path('register/guest/', GuestRegisterView.as_view(), name = 'guest_register'),
+    # path('register/guest/', guest_register_view, name = 'guest_register'),
     path('checkout/address/create/', checkout_address_create_view, name = 'checkout_address_create'),
     path('checkout/address/reuse/', checkout_address_reuse_view, name = 'checkout_address_reuse'),
     path('api/cart/', cart_detail_api_view, name = 'api_cart'),
@@ -42,8 +49,10 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name = 'register'),
     # path('register/', register_page, name = 'register'),
     path('products/', include('products.urls', namespace = 'products')),
+    path('orders/', include('orders.urls', namespace = 'orders')),
     path('search/', include('search.urls', namespace = 'search')),
     path('cart/', include('carts.urls', namespace = 'carts')),
+    path('settings/', RedirectView.as_view(url = '/account')),
     path('settings/email/', MarketingPreferenceView.as_view(), name = 'marketing_pref'),
     path('webhooks/mailchimp/', MailchimpWebhookView.as_view(), name = 'webhooks-mailchimp'),
     path('admin/', admin.site.urls),

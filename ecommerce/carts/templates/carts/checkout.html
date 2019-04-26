@@ -52,17 +52,17 @@
                 </div>
             {% else %}
                 <h1>Checkout</h1>
-                <p class="lead">Cart Item(s): 
+                <p class="lead"><b>Cart Item(s):</b> 
                     {% for product in order.cart.products.all %}
                         {{ product }}{% if not forloop.last %}, {% endif %}
                     {% endfor %}
                 </p>
-                <p class="lead">Shipping Address: {{ order.shipping_address.get_address }}</p>
-                <p class="lead">Billing Address: {{ order.billing_address.get_address }}</p>
-                <p class="lead">Payment Method: {{ billing_profile.default_card }} (<a href="{{ billing_profile.get_payment_method_url }}?next={{ request.build_absolute_uri }}">Change</a>)</p>
-                <p class="lead">Cart total: {{ order.cart.total }}</p>
-                <p class="lead">Shipping total: {{ order.shipping_total }}</p>
-                <p class="lead">Order total: {{ order.total }}</p>
+                <p class="lead"><b>Shipping Address:</b> {{ order.shipping_address.get_address }}</p>
+                <p class="lead"><b>Billing Address:</b> {{ order.billing_address.get_address }}</p>
+                <p class="lead"><b>Payment Method:</b> {{ billing_profile.default_card }} (<a href="{{ billing_profile.get_payment_method_url }}?next={{ request.build_absolute_uri }}">Change</a>)</p>
+                <p class="lead"><b>Cart total:</b> {{ order.cart.total }}</p>
+                <p class="lead"><b>Shipping total:</b> {{ order.shipping_total }}</p>
+                <p class="lead"><b>Order total:</b> {{ order.total }}</p>
                 <form class="form" method="POST">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-success btn-lg">Checkout</button>

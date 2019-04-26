@@ -90,7 +90,12 @@ pre_save.connect(billing_profile_created_receiver, sender = BillingProfile)
 
 def user_created_receiver(sender, instance, created, *args, **kwargs):
     if created and instance.email:
-        BillingProfile.objects.get_or_create(user = instance, email = instance.email)
+        # BillingProfile.objects.get_or_create(user = instance, email = instance.email)
+        try:
+            obj = BillingProfile.objects.get(user = instance, email = instance.email)
+        except BillingProfile.DoesNotExist:
+            obj = BillingProfile(user = instance, email = instance.email)
+            obj.save()
 
 post_save.connect(user_created_receiver, sender = User)
 

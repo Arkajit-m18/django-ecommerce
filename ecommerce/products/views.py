@@ -3,6 +3,8 @@ from django.views.generic import (
     ListView,
     DetailView,
 )
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 from .models import Product
 from carts.models import Cart
@@ -12,13 +14,36 @@ from analytics.mixins import ObjectViewedMixin
 # Create your views here.
 class ProductListView(ListView):
     model = Product
+    paginate_by = 3
 
     def get_context_data(self, **kwargs):
         context = super(ProductListView, self).get_context_data(**kwargs)
+        all_products = Product.objects.all()
+        cart_obj, new_obj = Cart.objects.new_or_get(self.request)
+        context['cart'] = cart_obj
+        paginator = Paginator(all_products, self.paginate_by)
+        page = self.request.GET.get('page')
+        try:
+            products = paginator.page(page)
+        except PageNotAnInteger:
+            products = paginator.page(1)
+        except EmptyPage:
+            products = paginator.page(paginator.num_pages)
+        context['product_list'] = products
+        return context
+
+class UserProductHistoryView(LoginRequiredMixin, ListView):
+    template_name = 'products/user_product_history.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(UserProductHistoryView, self).get_context_data(**kwargs)
         cart_obj, new_obj = Cart.objects.new_or_get(self.request)
         context['cart'] = cart_obj
         return context
     
+    def get_queryset(self, *args, **kwargs):
+        views = self.request.user.objectviewed_set.by_model(model_class = Product)
+        return views
 
 class ProductDetailView(ObjectViewedMixin, DetailView):
     model = Product
