@@ -139,18 +139,23 @@ $(document).ready(function() {
         success: function(data) {
           console.log("success");
           var hiddenCartItemRemoveForm = $(".cart-item-remove-form");
+          var hiddenCartQuantityForm = $(".cart-item-quantity-form");
           if (data.products.length > 0) {
             productRows.html("")
             var i = data.products.length
             $.each(data.products, function(index, element) {
               var newCartItemRemove = hiddenCartItemRemoveForm.clone();
+              var newCartQuantityUpdate = hiddenCartQuantityForm.clone();
               newCartItemRemove.css("display", "block"); // newCartItemRemove.removeClass("hidden-class")
               newCartItemRemove.find(".cart-item-product-id").val(element.id);
+              newCartQuantityUpdate.css("display", "block");
+              newCartQuantityUpdate.find(".cart-item-product-id").val(element.id)
               cartBody.prepend(`
               <tr>
                 <th scope="row">${i}</th>
                 <td><a href="${element.url}">${element.name}</a>${newCartItemRemove.html()}</td>
-                <td>${element.price}</td>
+                <td>${newCartQuantityUpdate.html()}</td>
+                <td id="product-price-${element.id}">${element.price}</td>
               </tr>
               `);
               i--;
@@ -167,8 +172,65 @@ $(document).ready(function() {
             content: "An error occurred",
             theme: "modern"
           });
-          console.log("error");
+          console.log(errorData);
         }
       });
     }
+
+    var quantityForm = $(".form-product-quantity-ajax");
+    // var hasIncreased = false;
+    // var hasDecreased = false;
+    var oldValue = 0;
+    var currentValue = 0;
+    $(".cart-product-quantity").focusout(function() {
+      var direction = this.defaultValue < this.value
+      oldValue = parseInt(this.defaultValue);
+      currentValue = parseInt(this.value);
+      this.defaultValue = this.value;
+      // if (direction) {
+      //   hasIncreased = true;
+      //   hasDecreased = false;
+      // }
+      // else {
+      //   hasDecreased = true;
+      //   hasIncreased = false;
+      // }
+    });
+    quantityForm.submit(function(event) {
+      event.preventDefault();
+      var cartTable = $(".cart-table");
+      var cartBody = cartTable.find(".cart-body");
+      var thisForm = $(this);
+      var productQty = parseInt(thisForm.find(".cart-product-quantity").val());
+      var productId = thisForm.find(".cart-item-product-id").val();
+
+      var refreshCartQuantityUrl = '/api/cart/quantity/'
+      var refreshCartQuantityMethod = "POST"
+      var data = {
+        'product_id': productId,
+        'product_qty': productQty,
+        'old_value': oldValue,
+        'current_value': currentValue,
+        // 'has_increased': hasIncreased,
+        // 'has_decreased': hasDecreased,
+      };
+      $.ajax({
+        url: refreshCartQuantityUrl,
+        method: refreshCartQuantityMethod,
+        data: data,
+        success: function(data){
+          cartBody.find(".cart-subtotal").text(data.subtotal);
+          cartBody.find(".cart-total").text(data.total);
+          cartBody.find(`#product-price-${productId}`).text(`${data.original_price} X ${data.product_qty} = ${data.new_price}`);
+        },
+        error: function(errorData) {
+          $.alert({
+            title: "Oops!",
+            content: "An error occurred",
+            theme: "modern"
+          });
+          console.log(errorData);
+        }
+      });
+    });
 });

@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.conf import settings
 
+from decimal import Decimal
+
 from .models import Cart
 from products.models import Product
 from orders.models import Order
@@ -26,6 +28,30 @@ def cart_detail_api_view(request):
     }
     return JsonResponse(json_data)
 
+def cart_quantity_api_view(request):
+    product_id = request.POST.get('product_id')
+    product_qty = request.POST.get('product_qty')
+    has_increased = request.POST.get('has_increased')
+    has_decreased = request.POST.get('has_decreased')
+    current_value = int(request.POST.get('current_value'))
+    old_value = int(request.POST.get('old_value'))
+    cart_obj, new_obj = Cart.objects.new_or_get(request)
+    product = cart_obj.products.get(id = product_id)
+    new_price = Decimal(current_value) * product.price
+    # if has_increased:
+    cart_obj.total -= Decimal(old_value) * product.price
+    cart_obj.total += Decimal(current_value) * product.price
+    cart_obj.subtotal = cart_obj.total
+    cart_obj.save()
+    json_data = {
+        'subtotal': cart_obj.subtotal,
+        'total': cart_obj.total,
+        'new_price': new_price,
+        'original_price': product.price,
+        'product_qty': product_qty,
+    }
+    return JsonResponse(json_data)
+
 def cart_home(request):
     cart_obj, new_obj = Cart.objects.new_or_get(request)
     return render(request, 'carts/home.html', {'cart': cart_obj})
@@ -36,7 +62,6 @@ def cart_update(request):
         try:
             product_obj = Product.objects.get(id = product_id)
         except Product.DoesNotExist:
-            print('Show message to user, product is gone!')
             return redirect('carts:cart_home')
         cart_obj, new_obj = Cart.objects.new_or_get(request)
         if product_obj in cart_obj.products.all():

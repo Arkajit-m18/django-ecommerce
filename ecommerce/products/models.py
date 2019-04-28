@@ -79,6 +79,9 @@ class Product(models.Model):
     def __str__(self):
         return self.title
 
+    class Meta:
+        ordering = ['-timestamp']
+
 def product_pre_save_receiver(sender, instance, *args, **kwargs):
     if not instance.slug:
         instance.slug = unique_slug_generator(instance)
