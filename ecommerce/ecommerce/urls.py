@@ -26,6 +26,7 @@ from carts.views import cart_home, cart_detail_api_view, cart_quantity_api_view
 from addresses.views import checkout_address_create_view, checkout_address_reuse_view
 from billing.views import payment_method_view, payment_method_createview
 from marketing.views import MarketingPreferenceView, MailchimpWebhookView
+from orders.views import LibraryView
 
 urlpatterns = [
     path('', views.home_page, name = 'home'),
@@ -51,6 +52,7 @@ urlpatterns = [
     # path('register/', register_page, name = 'register'),
     path('products/', include('products.urls', namespace = 'products')),
     path('orders/', include('orders.urls', namespace = 'orders')),
+    path('library/', LibraryView.as_view(), name = 'digital_library'),
     path('search/', include('search.urls', namespace = 'search')),
     path('cart/', include('carts.urls', namespace = 'carts')),
     path('settings/', RedirectView.as_view(url = '/account')),

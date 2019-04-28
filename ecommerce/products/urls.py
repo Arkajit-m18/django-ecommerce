@@ -9,6 +9,7 @@ urlpatterns = [
     path('history/', views.UserProductHistoryView.as_view(), name = 'products-history'),
     path('featured/', views.ProductFeaturedListView.as_view(), name = 'featured_products'),
     path('<slug:slug>/', views.ProductSlugDetailView.as_view(), name = 'single_product'),
+    path('<slug:slug>/<int:pk>/', views.ProductDownloadView.as_view(), name = 'download'),
     path('featured/<slug:slug>/', views.ProductSlugFeaturedDetailView.as_view(), name = 'single_featured'),
 
     

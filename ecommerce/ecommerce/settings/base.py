@@ -38,7 +38,7 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'django ecommerce <my_user@gmail.com>'
 
 MANAGERS = (
-    ('Me', 'my_user@gmail.com'),
+    ('Arkajit Mondal', 'arkajit.18@gmail.com'),
 )
 
 ADMINS = MANAGERS
@@ -165,6 +165,8 @@ STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'static_cdn', 'static_root
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'static_cdn', 'media_root')
+
+PROTECTED_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'static_cdn', 'protected_media')
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'

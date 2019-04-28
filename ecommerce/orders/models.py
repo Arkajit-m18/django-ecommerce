@@ -1,13 +1,17 @@
 from django.db import models
 from django.db.models.signals import pre_save, post_save
 from django.urls import reverse
+from django.conf import settings
 
 from carts.models import Cart
 from ecommerce.utils import unique_order_id_generator
 from billing.models import BillingProfile
 from addresses.models import Address
+from products.models import Product
 
 import math
+
+User = settings.AUTH_USER_MODEL
 
 ORDER_STATUS_CHOICES = (
     ('created', 'Created'),
@@ -83,18 +87,39 @@ class Order(models.Model):
         return new_total
 
     def check_done(self):
+        shipping_address_required = not self.cart.is_digital
+        if shipping_address_required and self.shipping_address:
+            shipping_done = True
+        elif shipping_address_required and not self.shipping_address:
+            shipping_done = False
+        else:
+            shipping_done = True
+
         billing_profile = self.billing_profile
-        shipping_address = self.shipping_address
+        # shipping_address = self.shipping_address
         billing_address = self.billing_address
         total = self.total
-        if billing_profile and shipping_address and billing_address and total > 0:
+        if billing_profile and shipping_done and billing_address and total > 0:
             return True
         return False
 
+    def update_purchases(self):
+        for product in self.cart.products.all():
+            obj, created = ProductPurchase.objects.get_or_create(
+                order_id = self.order_id,
+                product = product,
+                billing_profile = self.billing_profile
+            )
+            # obj.refunded = False
+            # obj.save()
+        return ProductPurchase.objects.filter(order_id = self.order_id).count()
+
     def mark_paid(self):
-        if self.check_done():
-            self.status = 'paid'
-            self.save()
+        if self.status != 'paid':
+            if self.check_done():
+                self.status = 'paid'
+                self.save()
+                self.update_purchases()
         return self.status
 
 def pre_save_create_order_id(sender, instance, *args, **kwargs):
@@ -123,3 +148,50 @@ def post_save_order(sender, instance, created, *args, **kwargs):
         instance.update_total()
 
 post_save.connect(post_save_order, sender = Order)
+
+class ProductPurchaseQuerySet(models.QuerySet):
+    def active(self):
+        return self.filter(refunded = False)
+
+    def digital(self):
+        return self.filter(product__is_digital = True)
+
+    def by_billing_profile(self, request):
+        billing_profile, created = BillingProfile.objects.new_or_get(request)
+        return self.filter(billing_profile = billing_profile)
+
+class ProductPurchaseManager(models.Manager):
+    def get_queryset(self):
+        return ProductPurchaseQuerySet(self.model, using = self._db)
+
+    def all(self):
+        return self.get_queryset().active()
+
+    def digital(self):
+        return self.get_queryset().active().digital()
+
+    def by_billing_profile(self, request):
+        return self.get_queryset().by_billing_profile(request)
+
+    def products_by_id(self, request):
+        qs = self.by_billing_profile(request).digital()
+        product_ids = [obj.product.id for obj in qs]
+        return product_ids
+
+    def products_by_request(self, request):
+        ids_ = self.products_by_id(request)
+        product_qs = Product.objects.filter(id__in = ids_).distinct()
+        return product_qs
+
+class ProductPurchase(models.Model):
+    billing_profile = models.ForeignKey(BillingProfile, on_delete = models.CASCADE)
+    order_id = models.CharField(max_length = 120)
+    product = models.ForeignKey(Product, on_delete = models.CASCADE)
+    refunded = models.BooleanField(default = False)
+    updated = models.DateTimeField(auto_now = True)
+    timestamp = models.DateTimeField(auto_now_add = True)
+
+    objects = ProductPurchaseManager()
+
+    def __str__(self):
+        return self.product.title

@@ -1,8 +1,7 @@
 from django.utils.text import slugify
 from random import randint
 
-import random
-import string
+import random, os, string
 
 def random_string_generator(size = 10, chars = string.ascii_lowercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
@@ -42,3 +41,6 @@ def unique_key_generator(instance):
     if qs_exists:
         return unique_key_generator(instance)
     return key
+
+def get_filename(path):
+    return os.path.basename(path)

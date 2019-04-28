@@ -2,8 +2,10 @@ from django.db import models
 from django.urls import reverse
 from django.db.models import Q
 from django.db.models.signals import pre_save, post_save
+from django.core.files.storage import FileSystemStorage
+from django.conf import settings
 
-from ecommerce.utils import unique_slug_generator
+from ecommerce.utils import unique_slug_generator, get_filename
 
 import random, os
 
@@ -70,14 +72,19 @@ class Product(models.Model):
     featured = models.BooleanField(default = False)
     active = models.BooleanField(default = True)
     timestamp = models.DateTimeField(auto_now_add = True)
+    is_digital = models.BooleanField(default = False)
 
     objects = ProductManager()
+
+    def __str__(self):
+        return self.title
 
     def get_absolute_url(self):
         return reverse('products:single_product', kwargs={'slug': self.slug})
 
-    def __str__(self):
-        return self.title
+    def get_downloads(self):
+        qs = self.productfile_set.all()
+        return qs
 
     class Meta:
         ordering = ['-timestamp']
@@ -87,3 +94,32 @@ def product_pre_save_receiver(sender, instance, *args, **kwargs):
         instance.slug = unique_slug_generator(instance)
 
 pre_save.connect(product_pre_save_receiver, sender = Product)
+
+def upload_product_file_location(instance, filename):
+    slug = instance.product.slug
+    if not slug:
+        slug = unique_slug_generator(instance.product)
+    location = f'product/{slug}/'
+    return location + filename
+
+class ProductFile(models.Model):
+    product = models.ForeignKey(Product, on_delete = models.CASCADE)
+    product_file = models.FileField(upload_to = upload_product_file_location, storage = FileSystemStorage(location = settings.PROTECTED_ROOT))
+    free = models.BooleanField(default = False)
+    user_required = models.BooleanField(default = False)
+
+    def __str__(self):
+        return str(self.product_file.name)
+
+    def get_download_url(self):
+        return reverse('products:download', kwargs = {
+            'slug': self.product.slug,
+            'pk': self.pk,
+        })
+
+    def get_default_url(self):
+        return self.product.get_absolute_url()
+
+    @property
+    def name(self):
+        return get_filename(self.product_file.name)
